@@ -62,6 +62,7 @@ for file in os.listdir("individual_peaks"):
 
         augmented_peaks = []
         augmented_labels = []
+        source_indices = []
 
         # Determine oversampling factor per file based on class count
         num_orig = len(peaks)
@@ -70,26 +71,31 @@ for file in os.listdir("individual_peaks"):
         else:
             repeats = max(1, int(np.ceil(target_per_class / num_orig)))
 
-        for peak in peaks:
+        for src_idx, peak in enumerate(peaks):
             for _ in range(repeats):
                 # Original
                 augmented_peaks.append(peak)
                 augmented_labels.append("original")
+                source_indices.append(src_idx)
                 # Noise
                 augmented_peaks.append(add_noise(peak, snr_scale=0.1))
                 augmented_labels.append("noise")
+                source_indices.append(src_idx)
                 # Time warp (random compress/expand)
                 augmented_peaks.append(time_warp(peak, warp_min=0.9, warp_max=1.1))
                 augmented_labels.append("time_warp")
+                source_indices.append(src_idx)
                 # Time shift (small)
                 augmented_peaks.append(time_shift(peak, max_shift=10))
                 augmented_labels.append("time_shift")
+                source_indices.append(src_idx)
 
         augmented_strings = [",".join(map(str, p)) for p in augmented_peaks]
 
         augmented_df = pd.DataFrame({
             'Peak Data': augmented_strings,
-            'Augmentation': augmented_labels
+            'Augmentation': augmented_labels,
+            'SourceIndex': source_indices,
         })
 
         os.makedirs(output_folder, exist_ok=True)

@@ -7,7 +7,7 @@ import pandas as pd
 import os
 from torch.utils.data import DataLoader, TensorDataset, WeightedRandomSampler
 from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GroupShuffleSplit
 from sklearn.utils.class_weight import compute_class_weight
 import argparse
 import json
@@ -28,6 +28,7 @@ def load_data(button_filters=None):
 
     all_peaks = []
     labels = []
+    groups = []
     
     for file in csv_files:
         file_path = os.path.join(path, file)
@@ -42,8 +43,13 @@ def load_data(button_filters=None):
         df = pd.read_csv(file_path)
 
         peak = df['Peak Data'].apply(lambda x: np.array(x.split(",")).astype(float))
+        # Use SourceIndex if present; otherwise fall back to row index
+        if 'SourceIndex' in df.columns:
+            source_indices = df['SourceIndex'].to_numpy()
+        else:
+            source_indices = np.arange(len(df))
 
-        for single_peak in peak:
+        for single_peak, src_idx in zip(peak, source_indices):
             single_peak = (single_peak - single_peak.mean()) / (single_peak.std() + 1e-6)
             if len(single_peak) < bdm.window_len:
                 single_peak = np.pad(single_peak, (0, bdm.window_len - len(single_peak)))
@@ -52,6 +58,8 @@ def load_data(button_filters=None):
 
             all_peaks.append(single_peak)
             labels.append(button_name)
+            # Group by filename + source index to keep all variants together
+            groups.append(f"{file}:{int(src_idx)}")
 
     if len(all_peaks) == 0:
         raise ValueError("No data found after applying button filters. Check --buttons values and data-dir.")
@@ -62,14 +70,15 @@ def load_data(button_filters=None):
     label_encoder = LabelEncoder()
     encoded_labels = label_encoder.fit_transform(labels)
 
-    print("Encoded Labels:", encoded_labels)
+    print("Encoded Labels:", encoded_labels[:10])
     print("Label Mapping:", dict(zip(label_encoder.classes_, range(len(label_encoder.classes_)))))
 
-    # Convert to tensors and return
+    # Convert to arrays and return
     return (
-        torch.tensor(all_peaks, dtype=torch.float32),
-        torch.tensor(encoded_labels, dtype=torch.long),
+        np.array(all_peaks, dtype=np.float32),
+        np.array(encoded_labels, dtype=np.int64),
         label_encoder.classes_.tolist(),
+        np.array(groups),
     )
 
         
@@ -88,31 +97,43 @@ if __name__ == "__main__":
     else:
         print("Training with all available buttons in", path)
 
-    X, y, classes = load_data(button_filters=args.buttons)
+    X_np, y_np, classes, groups = load_data(button_filters=args.buttons)
 
     # Save classes alongside the model
     classes_path = f"{args.model_out}.classes.json"
     with open(classes_path, "w") as f:
         json.dump(classes, f)
 
-    X = X.unsqueeze(1) # Add a channel dimension: [batch_size, 1, signal_length]
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+    # Group-wise split to avoid leakage across augmentations of same press
+    gss = GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
+    train_idx, val_idx = next(gss.split(X_np, y_np, groups=groups))
+
+    X_train_np, X_val_np = X_np[train_idx], X_np[val_idx]
+    y_train_np, y_val_np = y_np[train_idx], y_np[val_idx]
+
+    # Convert to tensors and add channel dim
+    X_train = torch.tensor(X_train_np).unsqueeze(1)
+    X_val = torch.tensor(X_val_np).unsqueeze(1)
+    y_train = torch.tensor(y_train_np)
+    y_val = torch.tensor(y_val_np)
 
     train_dataset = TensorDataset(X_train, y_train)
-    val_dataset = TensorDataset(X_test, y_test)
+    val_dataset = TensorDataset(X_val, y_val)
 
     # Use a weighted sampler to address class imbalance
-    class_counts = np.bincount(y_train.numpy())
+    class_counts = np.bincount(y_train_np)
     class_weights_for_sampler = 1.0 / np.maximum(class_counts, 1)
-    sample_weights = class_weights_for_sampler[y_train.numpy()]
+    sample_weights = class_weights_for_sampler[y_train_np]
     sampler = WeightedRandomSampler(weights=sample_weights, num_samples=len(sample_weights), replacement=True)
 
     train_loader = DataLoader(train_dataset, batch_size=32, sampler=sampler)
     val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
 
     # Get weights 
-    class_weights = compute_class_weight(class_weight='balanced', classes=np.unique(y_train.numpy()), y=y_train.numpy())
+    class_weights = compute_class_weight(class_weight='balanced', classes=np.unique(y_train_np), y=y_train_np)
 
     # Convert to a PyTorch tensor
     class_weights = torch.tensor(class_weights, dtype=torch.float32)
@@ -120,7 +141,7 @@ if __name__ == "__main__":
     print("Class Weights:", class_weights)
 
     # Set number of classes dynamically from selected labels
-    num_classes = int(len(torch.unique(y)))
+    num_classes = int(len(np.unique(y_np)))
     criterion = nn.CrossEntropyLoss(weight=class_weights)
 
     model = bdm.CNNTransformerClassifier(num_classes=num_classes)
@@ -128,7 +149,7 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-4)
 
     print("Train class distribution:", torch.bincount(y_train))
-    print("Val class distribution:", torch.bincount(y_test))
+    print("Val class distribution:", torch.bincount(y_val))
 
 
     num_epochs = 200
@@ -161,10 +182,8 @@ if __name__ == "__main__":
         val_preds = torch.cat(val_preds)
         val_targets = torch.cat(val_targets)
         val_accuracy = (val_preds.argmax(dim=1) == val_targets).float().mean().item()
-
-       
         
-
+        
         if val_accuracy > best_val_accuracy:
             print(f"Epoch {epoch+1}/{num_epochs}, Loss: {total_loss}, Val Accuracy: {val_accuracy:.4f} New Best!")
             best_val_accuracy = val_accuracy
