@@ -10,6 +10,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.utils.class_weight import compute_class_weight
 import argparse
+import json
 
 import button_detection_model2 as bdm
 
@@ -64,18 +65,19 @@ def load_data(button_filters=None):
     print("Encoded Labels:", encoded_labels)
     print("Label Mapping:", dict(zip(label_encoder.classes_, range(len(label_encoder.classes_)))))
 
-    import json
-    with open("label_encoder_classes.json", "w") as f:
-        json.dump(label_encoder.classes_.tolist(), f)
-
     # Convert to tensors and return
-    return torch.tensor(all_peaks, dtype=torch.float32), torch.tensor(encoded_labels, dtype=torch.long)
+    return (
+        torch.tensor(all_peaks, dtype=torch.float32),
+        torch.tensor(encoded_labels, dtype=torch.long),
+        label_encoder.classes_.tolist(),
+    )
 
         
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train button classifier with optional button filtering")
     parser.add_argument("--buttons", nargs="+", help="Buttons to include, e.g., 'top left' 'bottom right'", default=None)
     parser.add_argument("--data-dir", type=str, default="augmented_peaks", help="Directory with augmented CSVs")
+    parser.add_argument("--model-out", type=str, default="bdm_CNN_augmented3.pt", help="Path to save model weights")
     args = parser.parse_args()
 
     # Override data path
@@ -86,7 +88,12 @@ if __name__ == "__main__":
     else:
         print("Training with all available buttons in", path)
 
-    X, y = load_data(button_filters=args.buttons)
+    X, y, classes = load_data(button_filters=args.buttons)
+
+    # Save classes alongside the model
+    classes_path = f"{args.model_out}.classes.json"
+    with open(classes_path, "w") as f:
+        json.dump(classes, f)
 
     X = X.unsqueeze(1) # Add a channel dimension: [batch_size, 1, signal_length]
 
@@ -160,7 +167,7 @@ if __name__ == "__main__":
         if val_accuracy > best_val_accuracy:
             best_val_accuracy = val_accuracy
             epochs_since_improvement = 0
-            torch.save(model.state_dict(), "bdm_CNN_augmented3.pt")  # Save best model
+            torch.save(model.state_dict(), args.model_out)  # Save best model
         else:
             epochs_since_improvement += 1
 

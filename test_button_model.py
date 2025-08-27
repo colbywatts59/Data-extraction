@@ -10,6 +10,7 @@ import torch.nn.functional as F
 import torch
 from sklearn.metrics import classification_report, confusion_matrix
 import json, numpy as np
+import argparse
 
 import button_detection_model2 as bdm
 
@@ -18,15 +19,12 @@ import button_detection_model2 as bdm
 path = "test_data/individual_peaks"
 
 
-def load_data():
+def load_data(allowed_classes):
     csv_files = sorted([f for f in os.listdir(path) if f.endswith(".csv")])
 
-    # Load label classes from training
-    with open("label_encoder_classes.json", "r") as f:
-        classes = json.load(f)
     label_encoder = LabelEncoder()
-    label_encoder.classes_ = np.array(classes)
-    allowed = set(classes)
+    label_encoder.classes_ = np.array(allowed_classes)
+    allowed = set(allowed_classes)
 
     all_peaks = []
     labels = []
@@ -59,50 +57,60 @@ def load_data():
     encoded_labels = label_encoder.transform(labels)
     return torch.tensor(all_peaks, dtype=torch.float32), torch.tensor(encoded_labels, dtype=torch.long), label_encoder
 
-# Load and preprocess test data
-x_data, y_data, label_encoder = load_data()
-num_classes = len(label_encoder.classes_)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Test button classifier against test_data/individual_peaks")
+    parser.add_argument("--model", type=str, default="bdm_CNN_augmented3.pt", help="Path to model weights (.pt)")
+    args = parser.parse_args()
 
-# Load model with correct number of classes
-model = bdm.CNNTransformerClassifier(num_classes=num_classes)
-model.load_state_dict(torch.load("bdm_CNN_augmented3.pt", map_location=torch.device('cpu')))
-map_location=torch.device('cpu')
-model.eval()
+    # Load classes from sidecar
+    classes_path = f"{args.model}.classes.json"
+    with open(classes_path, "r") as f:
+        classes = json.load(f)
 
-x_data = x_data.unsqueeze(1)  # Add channel dim: [batch_size, 1, window_len]
-test_dataset = TensorDataset(x_data, y_data) 
+    # Load and preprocess test data
+    x_data, y_data, label_encoder = load_data(classes)
+    num_classes = len(label_encoder.classes_)
 
-test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+    # Load model with correct number of classes
+    model = bdm.CNNTransformerClassifier(num_classes=num_classes)
+    model.load_state_dict(torch.load(args.model, map_location=torch.device('cpu')))
+    map_location=torch.device('cpu')
+    model.eval()
 
-# Inference
-all_preds = []
-all_labels = []
+    x_data = x_data.unsqueeze(1)  # Add channel dim: [batch_size, 1, window_len]
+    test_dataset = TensorDataset(x_data, y_data) 
 
-with torch.no_grad():
-    for inputs, labels in test_loader: 
-        outputs = model(inputs)
-        preds = outputs.argmax(dim=1)
-        all_preds.append(preds)
-        all_labels.append(labels)
+    test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
 
-# Combine all batches
-all_preds = torch.cat(all_preds)
-all_labels = torch.cat(all_labels)
+    # Inference
+    all_preds = []
+    all_labels = []
 
-# Accuracy
-accuracy = (all_preds == all_labels).float().mean().item()
-print(f"\nTest Accuracy: {accuracy * 100:.2f}%")
+    with torch.no_grad():
+        for inputs, labels in test_loader: 
+            outputs = model(inputs)
+            preds = outputs.argmax(dim=1)
+            all_preds.append(preds)
+            all_labels.append(labels)
 
-# Report
-all_class_indices = list(range(len(label_encoder.classes_)))
+    # Combine all batches
+    all_preds = torch.cat(all_preds)
+    all_labels = torch.cat(all_labels)
 
-print("\nClassification Report:")
-print(classification_report(
-    all_labels.numpy(),
-    all_preds.numpy(),
-    labels=all_class_indices,
-    target_names=label_encoder.classes_
-))
+    # Accuracy
+    accuracy = (all_preds == all_labels).float().mean().item()
+    print(f"\nTest Accuracy: {accuracy * 100:.2f}%")
 
-print("\nConfusion Matrix:")
-print(confusion_matrix(all_labels.numpy(), all_preds.numpy()))
+    # Report
+    all_class_indices = list(range(len(label_encoder.classes_)))
+
+    print("\nClassification Report:")
+    print(classification_report(
+        all_labels.numpy(),
+        all_preds.numpy(),
+        labels=all_class_indices,
+        target_names=label_encoder.classes_
+    ))
+
+    print("\nConfusion Matrix:")
+    print(confusion_matrix(all_labels.numpy(), all_preds.numpy()))
