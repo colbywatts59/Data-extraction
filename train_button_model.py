@@ -162,13 +162,16 @@ if __name__ == "__main__":
         val_targets = torch.cat(val_targets)
         val_accuracy = (val_preds.argmax(dim=1) == val_targets).float().mean().item()
 
-        print(f"Epoch {epoch+1}/{num_epochs}, Loss: {total_loss}, Val Accuracy: {val_accuracy:.4f}")
+       
+        
 
         if val_accuracy > best_val_accuracy:
+            print(f"Epoch {epoch+1}/{num_epochs}, Loss: {total_loss}, Val Accuracy: {val_accuracy:.4f} New Best!")
             best_val_accuracy = val_accuracy
             epochs_since_improvement = 0
             torch.save(model.state_dict(), args.model_out)  # Save best model
         else:
+            print(f"Epoch {epoch+1}/{num_epochs}, Loss: {total_loss}, Val Accuracy: {val_accuracy:.4f}")
             epochs_since_improvement += 1
 
         if epochs_since_improvement >= patience:
