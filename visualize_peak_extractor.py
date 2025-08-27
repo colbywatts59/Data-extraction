@@ -22,7 +22,7 @@ import peak_detection_model as pdm
 path = "test_data/bottom left"
 
 # Name of CSV file
-trace = "Trace 7.csv"
+trace = "Trace 9.csv"
 
 full_path = os.path.join(path, trace)
 

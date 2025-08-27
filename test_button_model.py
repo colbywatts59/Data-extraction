@@ -9,7 +9,7 @@ from sklearn.preprocessing import LabelEncoder
 import torch.nn.functional as F
 import torch
 from sklearn.metrics import classification_report, confusion_matrix
-import json
+import json, numpy as np
 
 import button_detection_model2 as bdm
 
@@ -21,6 +21,13 @@ path = "test_data/individual_peaks"
 def load_data():
     csv_files = sorted([f for f in os.listdir(path) if f.endswith(".csv")])
 
+    # Load label classes from training
+    with open("label_encoder_classes.json", "r") as f:
+        classes = json.load(f)
+    label_encoder = LabelEncoder()
+    label_encoder.classes_ = np.array(classes)
+    allowed = set(classes)
+
     all_peaks = []
     labels = []
     
@@ -30,6 +37,8 @@ def load_data():
         print(f"Processing file {file_path}")
 
         button_name = file.split("_")[0]
+        if button_name not in allowed:
+            continue
 
         df = pd.read_csv(file_path)
 
@@ -45,28 +54,21 @@ def load_data():
             all_peaks.append(single_peak)
             labels.append(button_name)
 
-    # print("Example Peak:", all_peaks[0])
-    # print("Example Label:", labels[0])
-
-    label_encoder = LabelEncoder()
-    encoded_labels = label_encoder.fit_transform(labels)
-    with open("label_encoder_classes.json", "w") as f:
-        json.dump(label_encoder.classes_.tolist(), f)
-
-    # print("Encoded Labels:", encoded_labels)
-    # print("Label Mapping:", dict(zip(label_encoder.classes_, range(len(label_encoder.classes_)))))
-
     # For performance, convert to numpy array
     all_peaks = np.array(all_peaks)
+    encoded_labels = label_encoder.transform(labels)
     return torch.tensor(all_peaks, dtype=torch.float32), torch.tensor(encoded_labels, dtype=torch.long), label_encoder
-
-# Load model
-model = bdm.CNNTransformerClassifier()
-model.load_state_dict(torch.load("bdm_CNN_Transformer_augmented.pt"))
-model.eval()
 
 # Load and preprocess test data
 x_data, y_data, label_encoder = load_data()
+num_classes = len(label_encoder.classes_)
+
+# Load model with correct number of classes
+model = bdm.CNNTransformerClassifier(num_classes=num_classes)
+model.load_state_dict(torch.load("bdm_CNN_augmented3.pt", map_location=torch.device('cpu')))
+map_location=torch.device('cpu')
+model.eval()
+
 x_data = x_data.unsqueeze(1)  # Add channel dim: [batch_size, 1, window_len]
 test_dataset = TensorDataset(x_data, y_data) 
 
@@ -101,8 +103,6 @@ print(classification_report(
     labels=all_class_indices,
     target_names=label_encoder.classes_
 ))
-
-
 
 print("\nConfusion Matrix:")
 print(confusion_matrix(all_labels.numpy(), all_preds.numpy()))
