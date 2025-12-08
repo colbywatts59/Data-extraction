@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Grid Button App</string>
+    <style name="Base.Theme.GridButtonApp" parent="Theme.MaterialComponents.DayNight">
+        
+        
+    </style>
+    <style name="Theme.GridButtonApp" parent="Base.Theme.GridButtonApp"/>
+</resources>
