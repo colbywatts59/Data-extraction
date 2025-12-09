@@ -10,19 +10,19 @@ import retrofit2.http.POST
  * Retrofit API interface for recording endpoints
  */
 interface RecordingApi {
-    @POST("initialize")
+    @POST("touch/initialize")
     suspend fun initialize(): Response<RecordingResponse>
     
-    @POST("start_recording")
+    @POST("touch/start")
     suspend fun startRecording(@Body request: RecordingRequest): Response<RecordingResponse>
     
-    @POST("ping")
+    @POST("touch/ping")
     suspend fun ping(): Response<RecordingResponse>
     
-    @POST("toggle_graphs")
+    @POST("touch/toggle_graphs")
     suspend fun toggleGraphs(@Body request: Map<String, Boolean>): Response<RecordingResponse>
     
-    @POST("set_dataset_mode")
+    @POST("touch/set_dataset_mode")
     suspend fun setDatasetMode(@Body request: Map<String, String>): Response<RecordingResponse>
 }
 

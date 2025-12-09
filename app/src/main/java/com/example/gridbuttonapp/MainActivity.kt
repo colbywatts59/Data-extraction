@@ -40,6 +40,7 @@ fun AppNavigation() {
     var recordingDelay by remember { mutableStateOf(100L) }
     var showGraphs by remember { mutableStateOf(false) }
     var useTestDataset by remember { mutableStateOf(false) }
+    var manualMode by remember { mutableStateOf(false) }
     
     // Create a shared viewModel for clock sync testing on menu screen
     // Use key to recreate when API URL changes
@@ -82,12 +83,16 @@ fun AppNavigation() {
             onTestClockSync = {
                 menuViewModel.testClockSync()
             },
+            onToggleManualMode = { enabled ->
+                manualMode = enabled
+            },
             currentRows = gridRows,
             currentCols = gridCols,
             currentApiUrl = apiUrl,
             currentDelay = recordingDelay,
             showGraphs = showGraphs,
             useTestDataset = useTestDataset,
+            manualMode = manualMode,
             networkStatus = menuUiState.networkStatus,
             clockSyncResult = menuUiState.clockSyncResult
         )
@@ -108,7 +113,8 @@ fun AppNavigation() {
             recordingDelay = recordingDelay,
             showGraphs = showGraphs,
             useTestDataset = useTestDataset,
-            networkLatencyMs = networkLatency
+            networkLatencyMs = networkLatency,
+            manualMode = manualMode
         )
     }
 }

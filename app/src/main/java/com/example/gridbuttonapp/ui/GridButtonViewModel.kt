@@ -22,7 +22,8 @@ class GridButtonViewModel(
     recordingDelay: Long = 100L,
     showGraphs: Boolean = false,
     useTestDataset: Boolean = false,
-    initialNetworkLatency: Double = 0.0
+    initialNetworkLatency: Double = 0.0,
+    private val manualMode: Boolean = false
 ) : ViewModel() {
     
     // ===== CONFIGURATION - MODIFY THESE VALUES =====
@@ -49,32 +50,30 @@ class GridButtonViewModel(
     )
     val uiState: StateFlow<GridButtonUiState> = _uiState.asStateFlow()
     
-    // Initialize recording API (will be set after updating base URL)
-    private val recordingApi: RecordingApi
-    
-    init {
-        // Update the network module with the provided API URL FIRST
-        NetworkModule.updateBaseUrl(apiUrl)
-        // THEN get the recording API with the updated URL
-        recordingApi = NetworkModule.recordingApi
-        println("GridButtonViewModel created with API URL: $apiUrl, delay: $recordingDelayMs ms")
-        
-        // Initialize AD3 connection
-        initializeAd3()
-        
-        // Set graph visualization preference
-        setGraphVisualization(showGraphs)
-        setDatasetMode(useTestDataset)
-    }
+    // Initialize recording API (will be set after updating base URL) when not in manual mode
+    private val recordingApi: RecordingApi? =
+        if (!manualMode) {
+            NetworkModule.updateBaseUrl(apiUrl)
+            NetworkModule.recordingApi.also {
+                println("GridButtonViewModel created with API URL: $apiUrl, delay: $recordingDelayMs ms, manual=false")
+                initializeAd3()
+                setGraphVisualization(showGraphs)
+                setDatasetMode(useTestDataset)
+            }
+        } else {
+            println("GridButtonViewModel created in MANUAL mode (no API traffic).")
+            null
+        }
     
     /**
      * Initialize AD3 device
      */
     private fun initializeAd3() {
+        val api = recordingApi ?: return
         viewModelScope.launch {
             try {
                 println("Initializing AD3...")
-                val response = recordingApi.initialize()
+                val response = api.initialize()
                 if (response.isSuccessful && response.body()?.status == "success") {
                     println("✓ AD3 initialized successfully")
                     updateNetworkStatus(true)
@@ -91,41 +90,49 @@ class GridButtonViewModel(
     }
     
     /**
-     * Measure current network latency by sending a ping
-     * Returns latency in milliseconds
-     */
-    private suspend fun measureNetworkLatency(): Double {
-        return try {
-            val tSend = System.currentTimeMillis()
-            val response = recordingApi.ping()
-            val tReceive = System.currentTimeMillis()
-            
-            if (response.isSuccessful) {
-                val roundTripMs = tReceive - tSend
-                val latencyMs = roundTripMs / 2.0
-                latencyMs
-            } else {
-                println("⚠️  Ping failed, using 0ms latency")
-                0.0
-            }
-        } catch (e: Exception) {
-            println("⚠️  Ping error: ${e.message}, using 0ms latency")
-            0.0
-        }
-    }
-    
-    /**
-     * Handle button click - sends network requests and updates UI
+     * Handle button click using a two-tap capacitive-touch flow:
+     *  - First tap: "prime" the button and start AD3 capture on the server.
+     *  - Second tap on the same button: perform the actual press (flip to black,
+     *    hold for recordingDelayMs, then release).
      */
     fun onButtonClick(buttonIndex: Int) {
         println("Button $buttonIndex clicked!")
-        
+
+        // In manual mode, just flip immediately and do not touch the API.
+        if (manualMode) {
+            viewModelScope.launch {
+                updateButtonState(buttonIndex, true)
+                delay(recordingDelayMs)
+                updateButtonState(buttonIndex, false)
+            }
+            return
+        }
+
+        val currentPrimed = _uiState.value.primedButtonIndex
+        when {
+            currentPrimed == null -> {
+                // First tap: prime this button and start AD3 capture.
+                primeButton(buttonIndex)
+            }
+            currentPrimed == buttonIndex -> {
+                // Second tap on the same button: perform the capacitive-touch press.
+                performTouchPress(buttonIndex)
+            }
+            else -> {
+                // Ignore taps on other buttons while one is primed.
+                println("Ignoring tap on button $buttonIndex while button $currentPrimed is primed.")
+            }
+        }
+    }
+
+    /**
+     * Send a priming request to the server to start AD3 capture for this button.
+     * The response arrival is the cue for the user to perform the physical press.
+     */
+    private fun primeButton(buttonIndex: Int) {
+        val api = recordingApi ?: return
         viewModelScope.launch {
             try {
-                // Ping API first to get current network latency
-                val networkLatency = measureNetworkLatency()
-                println("Current network latency: ${networkLatency}ms")
-                
                 val timestamp = System.currentTimeMillis()
                 val request = RecordingRequest(
                     button = buttonIndex,
@@ -133,68 +140,45 @@ class GridButtonViewModel(
                     cols = _uiState.value.cols,
                     timestamp = timestamp,
                     press_length_ms = recordingDelayMs,
-                    network_latency_ms = networkLatency
+                    network_latency_ms = 0.0
                 )
-                
-                println("Sending recording request for button $buttonIndex...")
-                
-                // Send start_recording request and WAIT for response
-                val startResponse = recordingApi.startRecording(request)
-                
-                if (startResponse.isSuccessful && startResponse.body()?.status == "success") {
-                    // TIMESTAMP 1: Response received
-                    val t1_responseReceived = System.currentTimeMillis()
-                    println("═══ TIMING LOG ═══")
-                    println("T1: Response received at ${t1_responseReceived}ms")
-                    
-                    // Server responded successfully
-                    val responseBody = startResponse.body()
+
+                println("Sending capacitive-touch prime for button $buttonIndex...")
+                val response = api.startRecording(request)
+
+                if (response.isSuccessful && response.body()?.status == "success") {
                     updateNetworkStatus(true)
-                    
-                    val delayMs = responseBody?.delay_ms ?: 0
-                    
-                    println("Recording will start in ${delayMs}ms")
-                    
-                    // TIMESTAMP 2: About to start delay
-                    val t2_beforeDelay = System.currentTimeMillis()
-                    val processingTime1 = t2_beforeDelay - t1_responseReceived
-                    println("T2: Starting delay at ${t2_beforeDelay}ms (processing: ${processingTime1}ms)")
-                    
-                    // WAIT for sync delay before flipping button (synchronized with API)
-                    delay(delayMs.toLong())
-                    
-                    // TIMESTAMP 3: Delay complete, about to flip button
-                    val t3_beforeFlip = System.currentTimeMillis()
-                    val actualDelayTime = t3_beforeFlip - t2_beforeDelay
-                    println("T3: Delay complete at ${t3_beforeFlip}ms (actual delay: ${actualDelayTime}ms)")
-                    
-                    // NOW update the button to black (synchronized with recording start)
-                    updateButtonState(buttonIndex, true)
-                    
-                    // TIMESTAMP 4: Button actually flipped
-                    val t4_afterFlip = System.currentTimeMillis()
-                    val flipTime = t4_afterFlip - t3_beforeFlip
-                    println("T4: Button flipped at ${t4_afterFlip}ms (flip took: ${flipTime}ms)")
-                    
-                    val totalTime = t4_afterFlip - t1_responseReceived
-                    println("═══ TOTAL: ${totalTime}ms from response to button flip ═══")
-                    println("  Processing before delay: ${processingTime1}ms")
-                    println("  Actual delay: ${actualDelayTime}ms")
-                    println("  Button flip UI update: ${flipTime}ms")
-                    
-                    // Wait for press duration then reset button
-                    delay(recordingDelayMs)
-                    updateButtonState(buttonIndex, false)
-                    println("Button $buttonIndex reset after $recordingDelayMs ms")
+                    updatePrimedButton(buttonIndex)
+                    println("Button $buttonIndex primed. Cue user to press on second tap.")
                 } else {
-                    // Network failed - don't change button state
                     updateNetworkStatus(false)
-                    println("Recording request failed for button $buttonIndex - button stays white")
+                    println("Failed to prime button $buttonIndex: ${response.body()?.message}")
                 }
             } catch (e: Exception) {
-                // Network error - don't change button state
                 updateNetworkStatus(false)
-                println("Network error for button $buttonIndex: ${e.message}")
+                println("Error priming button $buttonIndex: ${e.message}")
+                e.printStackTrace()
+            }
+        }
+    }
+
+    /**
+     * Perform the actual capacitive-touch press: flip the button to black,
+     * hold it for recordingDelayMs, then release back to white.
+     */
+    private fun performTouchPress(buttonIndex: Int) {
+        viewModelScope.launch {
+            try {
+                println("Second tap for button $buttonIndex: starting capacitive-touch press.")
+                // Clear primed state as soon as the press begins.
+                updatePrimedButton(null)
+
+                updateButtonState(buttonIndex, true)
+                delay(recordingDelayMs)
+                updateButtonState(buttonIndex, false)
+                println("Button $buttonIndex reset after $recordingDelayMs ms")
+            } catch (e: Exception) {
+                println("Error during touch press for button $buttonIndex: ${e.message}")
                 e.printStackTrace()
             }
         }
@@ -222,6 +206,13 @@ class GridButtonViewModel(
     private fun updateNetworkStatus(isConnected: Boolean) {
         _uiState.value = _uiState.value.copy(networkStatus = isConnected)
     }
+
+    /**
+     * Update which button (if any) is currently primed for capacitive-touch.
+     */
+    private fun updatePrimedButton(buttonIndex: Int?) {
+        _uiState.value = _uiState.value.copy(primedButtonIndex = buttonIndex)
+    }
     
     /**
      * Update the recording delay
@@ -234,10 +225,11 @@ class GridButtonViewModel(
      * Set graph visualization preference on server
      */
     private fun setGraphVisualization(enabled: Boolean) {
+        val api = recordingApi ?: return
         viewModelScope.launch {
             try {
                 val request = mapOf("enabled" to enabled)
-                val response = recordingApi.toggleGraphs(request)
+                val response = api.toggleGraphs(request)
                 if (response.isSuccessful) {
                     println("Graph visualization ${if (enabled) "enabled" else "disabled"}")
                 }
@@ -255,10 +247,11 @@ class GridButtonViewModel(
      * Set dataset mode on server (train/test)
      */
     private fun setDatasetMode(useTestDataset: Boolean) {
+        val api = recordingApi ?: return
         viewModelScope.launch {
             try {
                 val mode = if (useTestDataset) "test" else "train"
-                val response = recordingApi.setDatasetMode(mapOf("mode" to mode))
+                val response = api.setDatasetMode(mapOf("mode" to mode))
                 if (response.isSuccessful) {
                     println("Dataset mode set to $mode")
                 } else {
@@ -287,6 +280,7 @@ class GridButtonViewModel(
      * Test clock synchronization with server
      */
     fun testClockSync() {
+        val api = recordingApi ?: return
         viewModelScope.launch {
             try {
                 println("\n═══ CLOCK SYNC TEST ═══")
@@ -296,7 +290,7 @@ class GridButtonViewModel(
                 println("T_send (phone): $tSendPhone ms")
                 
                 // Send ping request to server
-                val response = recordingApi.ping()
+                val response = api.ping()
                 
                 // Record time when response is received
                 val tReceivePhone = System.currentTimeMillis()
@@ -362,7 +356,8 @@ data class GridButtonUiState(
     val cols: Int,
     val buttonStates: List<Boolean>, // true = pressed (black), false = unpressed (white)
     val networkStatus: Boolean, // true = connected, false = disconnected
-    val clockSyncResult: ClockSyncResult? = null
+    val clockSyncResult: ClockSyncResult? = null,
+    val primedButtonIndex: Int? = null // which button is currently primed for capacitive-touch, if any
 )
 
 /**

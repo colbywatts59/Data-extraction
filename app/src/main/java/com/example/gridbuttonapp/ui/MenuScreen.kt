@@ -28,12 +28,14 @@ fun MenuScreen(
     onToggleGraphs: (Boolean) -> Unit,
     onToggleDataset: (Boolean) -> Unit,
     onTestClockSync: () -> Unit,
+    onToggleManualMode: (Boolean) -> Unit,
     currentRows: Int,
     currentCols: Int,
     currentApiUrl: String,
     currentDelay: Long,
     showGraphs: Boolean,
     useTestDataset: Boolean,
+    manualMode: Boolean,
     networkStatus: Boolean,
     clockSyncResult: ClockSyncResult? = null
 ) {
@@ -43,6 +45,7 @@ fun MenuScreen(
     var tempDelay by remember { mutableStateOf(currentDelay.toString()) }
     var graphsEnabled by remember { mutableStateOf(showGraphs) }
     var datasetTestEnabled by remember { mutableStateOf(useTestDataset) }
+    var manualTestEnabled by remember { mutableStateOf(manualMode) }
 
     LaunchedEffect(showGraphs) {
         graphsEnabled = showGraphs
@@ -50,6 +53,10 @@ fun MenuScreen(
 
     LaunchedEffect(useTestDataset) {
         datasetTestEnabled = useTestDataset
+    }
+
+    LaunchedEffect(manualMode) {
+        manualTestEnabled = manualMode
     }
     
     Column(
@@ -188,51 +195,80 @@ fun MenuScreen(
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
                 
-                // API URL Input
-                Text(
-                    text = "Server URL",
-                    fontSize = 14.sp,
-                    color = Color.Black,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                OutlinedTextField(
-                    value = tempApiUrl,
-                    onValueChange = { tempApiUrl = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    placeholder = { Text("http://10.0.2.2:5150/") }
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Recording Delay Input
-                Text(
-                    text = "Button Press Duration (ms)",
-                    fontSize = 14.sp,
-                    color = Color.Black,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                OutlinedTextField(
-                    value = tempDelay,
-                    onValueChange = { tempDelay = it },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    placeholder = { Text("1000") }
-                )
-                
-                Button(
-                    onClick = {
-                        onApiUrlChange(tempApiUrl)
-                        val delay = tempDelay.toLongOrNull() ?: 1000L
-                        println("Menu: Updating delay to: $delay ms")
-                        onDelayChange(delay)
-                    },
+                // Manual test mode toggle
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 16.dp)
+                        .padding(bottom = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Update API Settings")
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Manual test mode",
+                            fontSize = 14.sp,
+                            color = Color.Black
+                        )
+                        Text(
+                            text = "Disable API and flip buttons locally (no traces saved).",
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                    }
+                    Switch(
+                        checked = manualTestEnabled,
+                        onCheckedChange = { enabled ->
+                            manualTestEnabled = enabled
+                            onToggleManualMode(enabled)
+                        }
+                    )
+                }
+
+                // API URL + delay only matter when not in manual mode
+                if (!manualTestEnabled) {
+                    Text(
+                        text = "Server URL",
+                        fontSize = 14.sp,
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempApiUrl,
+                        onValueChange = { tempApiUrl = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        placeholder = { Text("http://10.0.2.2:5250/") }
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "Button Press Duration (ms)",
+                        fontSize = 14.sp,
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempDelay,
+                        onValueChange = { tempDelay = it },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        placeholder = { Text("1000") }
+                    )
+
+                    Button(
+                        onClick = {
+                            onApiUrlChange(tempApiUrl)
+                            val delay = tempDelay.toLongOrNull() ?: 1000L
+                            println("Menu: Updating delay to: $delay ms")
+                            onDelayChange(delay)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp)
+                    ) {
+                        Text("Update API Settings")
+                    }
                 }
             }
         }

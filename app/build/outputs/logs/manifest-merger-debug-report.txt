@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:2:1-31:12
-INJECTED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:2:1-31:12
-INJECTED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:2:1-31:12
-INJECTED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:2:1-31:12
+ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:2:1-31:12
+INJECTED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:2:1-31:12
+INJECTED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:2:1-31:12
+INJECTED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:2:1-31:12
 MERGED from [com.google.android.material:material:1.10.0] /Users/colbywatts/.gradle/caches/transforms-3/b66cf4d59812bc21f499218ef6f5cb91/transformed/material-1.10.0/AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] /Users/colbywatts/.gradle/caches/transforms-3/61900cb96ffc2bd496f96a7279063865/transformed/constraintlayout-2.0.1/AndroidManifest.xml:2:1-11:12
 MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /Users/colbywatts/.gradle/caches/transforms-3/b40471635c2f8dda8e984f151e403694/transformed/jetified-appcompat-resources-1.6.1/AndroidManifest.xml:17:1-22:12
@@ -74,26 +74,26 @@ MERGED from [androidx.documentfile:documentfile:1.0.0] /Users/colbywatts/.gradle
 MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /Users/colbywatts/.gradle/caches/transforms-3/c233a84d844a77a5db64b4bba6b81187/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.print:print:1.0.0] /Users/colbywatts/.gradle/caches/transforms-3/954307fe9eb1384af816411d226c6881/transformed/print-1.0.0/AndroidManifest.xml:17:1-22:12
 	package
-		INJECTED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml
+		INJECTED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml
 	android:versionName
-		INJECTED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml
+		INJECTED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml
 	xmlns:tools
-		ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:3:5-51
+		ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:3:5-51
 	android:versionCode
-		INJECTED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml
+		INJECTED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml
 	xmlns:android
-		ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:2:11-69
+		ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:2:11-69
 uses-permission#android.permission.INTERNET
-ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:6:5-67
+ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:6:5-67
 	android:name
-		ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:6:22-64
+		ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:6:22-64
 uses-permission#android.permission.ACCESS_NETWORK_STATE
-ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:7:5-79
+ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:7:5-79
 	android:name
-		ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:7:22-76
+		ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:7:22-76
 application
-ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:9:5-29:19
-INJECTED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:9:5-29:19
+ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:9:5-29:19
+INJECTED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:9:5-29:19
 MERGED from [com.google.android.material:material:1.10.0] /Users/colbywatts/.gradle/caches/transforms-3/b66cf4d59812bc21f499218ef6f5cb91/transformed/material-1.10.0/AndroidManifest.xml:22:5-20
 MERGED from [com.google.android.material:material:1.10.0] /Users/colbywatts/.gradle/caches/transforms-3/b66cf4d59812bc21f499218ef6f5cb91/transformed/material-1.10.0/AndroidManifest.xml:22:5-20
 MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] /Users/colbywatts/.gradle/caches/transforms-3/61900cb96ffc2bd496f96a7279063865/transformed/constraintlayout-2.0.1/AndroidManifest.xml:9:5-20
@@ -115,49 +115,49 @@ MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /Users/colbywatts
 MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/colbywatts/.gradle/caches/transforms-3/79cca1d4c1316294a431152e5012586a/transformed/jetified-startup-runtime-1.1.1/AndroidManifest.xml:25:5-31:19
 MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/colbywatts/.gradle/caches/transforms-3/79cca1d4c1316294a431152e5012586a/transformed/jetified-startup-runtime-1.1.1/AndroidManifest.xml:25:5-31:19
 	android:extractNativeLibs
-		INJECTED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml
+		INJECTED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.12.0] /Users/colbywatts/.gradle/caches/transforms-3/2ccd268e0ca2e1cd10ec650ac8067a3e/transformed/core-1.12.0/AndroidManifest.xml:28:18-86
 	android:supportsRtl
-		ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:14:9-35
+		ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:14:9-35
 	android:label
-		ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:13:9-41
+		ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:13:9-41
 	android:fullBackupContent
-		ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:12:9-54
+		ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:12:9-54
 	tools:targetApi
-		ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:17:9-29
+		ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:17:9-29
 	android:allowBackup
-		ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:10:9-35
+		ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:10:9-35
 	android:theme
-		ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:15:9-51
+		ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:15:9-51
 	android:dataExtractionRules
-		ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:11:9-65
+		ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:11:9-65
 	android:usesCleartextTraffic
-		ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:16:9-44
+		ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:16:9-44
 activity#com.example.gridbuttonapp.MainActivity
-ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:18:9-28:20
+ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:18:9-28:20
 	android:label
-		ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:21:13-45
+		ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:21:13-45
 	android:exported
-		ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:20:13-36
+		ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:20:13-36
 	android:theme
-		ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:22:13-55
+		ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:22:13-55
 	android:name
-		ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:19:13-41
+		ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:19:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:23:13-27:29
+ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:23:13-27:29
 action#android.intent.action.MAIN
-ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:24:17-69
+ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:24:17-69
 	android:name
-		ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:24:25-66
+		ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:24:25-66
 category#android.intent.category.LAUNCHER
-ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:26:17-77
+ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:26:17-77
 	android:name
-		ADDED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:26:27-74
+		ADDED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:26:27-74
 uses-sdk
-INJECTED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
-INJECTED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml
-INJECTED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml
+INJECTED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml
+INJECTED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml
 MERGED from [com.google.android.material:material:1.10.0] /Users/colbywatts/.gradle/caches/transforms-3/b66cf4d59812bc21f499218ef6f5cb91/transformed/material-1.10.0/AndroidManifest.xml:20:5-44
 MERGED from [com.google.android.material:material:1.10.0] /Users/colbywatts/.gradle/caches/transforms-3/b66cf4d59812bc21f499218ef6f5cb91/transformed/material-1.10.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] /Users/colbywatts/.gradle/caches/transforms-3/61900cb96ffc2bd496f96a7279063865/transformed/constraintlayout-2.0.1/AndroidManifest.xml:5:5-7:41
@@ -297,9 +297,9 @@ MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /Users/
 MERGED from [androidx.print:print:1.0.0] /Users/colbywatts/.gradle/caches/transforms-3/954307fe9eb1384af816411d226c6881/transformed/print-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.print:print:1.0.0] /Users/colbywatts/.gradle/caches/transforms-3/954307fe9eb1384af816411d226c6881/transformed/print-1.0.0/AndroidManifest.xml:20:5-44
 	android:targetSdkVersion
-		INJECTED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml
+		INJECTED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml
 	android:minSdkVersion
-		INJECTED from /Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml
+		INJECTED from /Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml
 activity#androidx.compose.ui.tooling.PreviewActivity
 ADDED from [androidx.compose.ui:ui-tooling-android:1.5.4] /Users/colbywatts/.gradle/caches/transforms-3/302289d9f82de1ba5cb1b0f6032a8b32/transformed/jetified-ui-tooling-release/AndroidManifest.xml:23:9-25:39
 	android:exported

@@ -30,11 +30,12 @@ fun GridButtonScreen(
     recordingDelay: Long = 100L,
     showGraphs: Boolean = false,
     useTestDataset: Boolean = false,
-    networkLatencyMs: Double = 0.0
+    networkLatencyMs: Double = 0.0,
+    manualMode: Boolean = false
 ) {
-    val viewModel = remember(initialRows, initialCols, apiUrl, recordingDelay, showGraphs, useTestDataset, networkLatencyMs) { 
-        println("Creating ViewModel with delay: $recordingDelay ms, graphs: $showGraphs, dataset: ${if (useTestDataset) "test" else "train"}, latency: ${networkLatencyMs}ms")
-        GridButtonViewModel(initialRows, initialCols, apiUrl, recordingDelay, showGraphs, useTestDataset, networkLatencyMs) 
+    val viewModel = remember(initialRows, initialCols, apiUrl, recordingDelay, showGraphs, useTestDataset, networkLatencyMs, manualMode) { 
+        println("Creating ViewModel with delay: $recordingDelay ms, graphs: $showGraphs, dataset: ${if (useTestDataset) "test" else "train"}, latency: ${networkLatencyMs}ms, manual=$manualMode")
+        GridButtonViewModel(initialRows, initialCols, apiUrl, recordingDelay, showGraphs, useTestDataset, networkLatencyMs, manualMode) 
     }
     val uiState by viewModel.uiState.collectAsState()
     
@@ -90,8 +91,11 @@ fun GridButtonScreen(
                     repeat(uiState.cols) { col ->
                         val index = row * uiState.cols + col
                         val isPressed = uiState.buttonStates[index]
+                        // Visual behavior:
+                        //  - Idle or primed: white
+                        //  - During actual press (second tap): black
                         val backgroundColor = if (isPressed) Color(0xFF000000) else Color(0xFFFFFFFF)
-                        
+
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -100,8 +104,8 @@ fun GridButtonScreen(
                                 .clickable(
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = null
-                                ) { 
-                                    viewModel.onButtonClick(index) 
+                                ) {
+                                    viewModel.onButtonClick(index)
                                 }
                         )
                     }

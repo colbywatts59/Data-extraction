@@ -10,11 +10,11 @@
 10
 11    <!-- Network permissions -->
 12    <uses-permission android:name="android.permission.INTERNET" />
-12-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:6:5-67
-12-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:6:22-64
+12-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:6:5-67
+12-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:6:22-64
 13    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-13-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:7:5-79
-13-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:7:22-76
+13-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:7:5-79
+13-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:7:22-76
 14
 15    <permission
 15-->[androidx.core:core:1.12.0] /Users/colbywatts/.gradle/caches/transforms-3/2ccd268e0ca2e1cd10ec650ac8067a3e/transformed/core-1.12.0/AndroidManifest.xml:22:5-24:47
@@ -28,45 +28,45 @@
 19-->[androidx.core:core:1.12.0] /Users/colbywatts/.gradle/caches/transforms-3/2ccd268e0ca2e1cd10ec650ac8067a3e/transformed/core-1.12.0/AndroidManifest.xml:26:22-94
 20
 21    <application
-21-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:9:5-29:19
+21-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:9:5-29:19
 22        android:allowBackup="true"
-22-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:10:9-35
+22-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:10:9-35
 23        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
 23-->[androidx.core:core:1.12.0] /Users/colbywatts/.gradle/caches/transforms-3/2ccd268e0ca2e1cd10ec650ac8067a3e/transformed/core-1.12.0/AndroidManifest.xml:28:18-86
 24        android:dataExtractionRules="@xml/data_extraction_rules"
-24-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:11:9-65
+24-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:11:9-65
 25        android:debuggable="true"
 26        android:extractNativeLibs="false"
 27        android:fullBackupContent="@xml/backup_rules"
-27-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:12:9-54
+27-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:12:9-54
 28        android:label="@string/app_name"
-28-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:13:9-41
+28-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:13:9-41
 29        android:supportsRtl="true"
-29-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:14:9-35
+29-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:14:9-35
 30        android:testOnly="true"
 31        android:theme="@style/Theme.GridButtonApp"
-31-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:15:9-51
+31-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:15:9-51
 32        android:usesCleartextTraffic="true" >
-32-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:16:9-44
+32-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:16:9-44
 33        <activity
-33-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:18:9-28:20
+33-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:18:9-28:20
 34            android:name="com.example.gridbuttonapp.MainActivity"
-34-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:19:13-41
+34-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:19:13-41
 35            android:exported="true"
-35-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:20:13-36
+35-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:20:13-36
 36            android:label="@string/app_name"
-36-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:21:13-45
+36-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:21:13-45
 37            android:theme="@style/Theme.GridButtonApp" >
-37-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:22:13-55
+37-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:22:13-55
 38            <intent-filter>
-38-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:23:13-27:29
+38-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:23:13-27:29
 39                <action android:name="android.intent.action.MAIN" />
-39-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:24:17-69
-39-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:24:25-66
+39-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:24:17-69
+39-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:24:25-66
 40
 41                <category android:name="android.intent.category.LAUNCHER" />
-41-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:26:17-77
-41-->/Users/colbywatts/Documents/College/Masters/app/src/main/AndroidManifest.xml:26:27-74
+41-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:26:17-77
+41-->/Users/colbywatts/Documents/College/Masters/Data extraction/app/src/main/AndroidManifest.xml:26:27-74
 42            </intent-filter>
 43        </activity>
 44        <activity
