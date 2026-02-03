@@ -30,13 +30,31 @@ fun GridButtonScreen(
     recordingDelay: Long = 100L,
     showGraphs: Boolean = false,
     useTestDataset: Boolean = false,
-    networkLatencyMs: Double = 0.0
+    networkLatencyMs: Double = 0.0,
+    manualTestMode: Boolean = false,
+    repeatButtonIndex: Int? = null,
+    repeatCount: Int? = null,
+    onRepeatComplete: () -> Unit = {}
 ) {
-    val viewModel = remember(initialRows, initialCols, apiUrl, recordingDelay, showGraphs, useTestDataset, networkLatencyMs) { 
-        println("Creating ViewModel with delay: $recordingDelay ms, graphs: $showGraphs, dataset: ${if (useTestDataset) "test" else "train"}, latency: ${networkLatencyMs}ms")
-        GridButtonViewModel(initialRows, initialCols, apiUrl, recordingDelay, showGraphs, useTestDataset, networkLatencyMs) 
+    val viewModel = remember(initialRows, initialCols, apiUrl, recordingDelay, showGraphs, useTestDataset, networkLatencyMs, manualTestMode) { 
+        println("Creating ViewModel with delay: $recordingDelay ms, graphs: $showGraphs, dataset: ${if (useTestDataset) "test" else "train"}, latency: ${networkLatencyMs}ms, manualTestMode: $manualTestMode")
+        GridButtonViewModel(initialRows, initialCols, apiUrl, recordingDelay, showGraphs, useTestDataset, networkLatencyMs, manualTestMode) 
     }
     val uiState by viewModel.uiState.collectAsState()
+    
+    // Launch repeat sequence if parameters are provided
+    LaunchedEffect(repeatButtonIndex, repeatCount) {
+        if (repeatButtonIndex != null && repeatCount != null && repeatCount > 0) {
+            println("GridButtonScreen: Starting repeat sequence for button $repeatButtonIndex, $repeatCount times")
+            viewModel.repeatButtonPress(
+                buttonIndex = repeatButtonIndex,
+                count = repeatCount,
+                onComplete = {
+                    onRepeatComplete()
+                }
+            )
+        }
+    }
     
     Column(
         modifier = Modifier
@@ -75,6 +93,17 @@ fun GridButtonScreen(
             fontSize = 14.sp,
             fontWeight = FontWeight.Normal,
             color = if (uiState.networkStatus) Color(0xFF00AA00) else Color(0xFFAA0000)
+        )
+        
+        // Manual test mode status
+        Text(
+            text = "Manual test mode: ${if (uiState.manualTestMode) "On" else "Off"}",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 2.dp),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Normal,
+            color = Color.Black
         )
         
         // Grid of buttons - takes remaining space

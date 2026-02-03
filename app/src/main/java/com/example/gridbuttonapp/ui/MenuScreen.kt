@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 /**
  * Menu screen with network status and grid size controls
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MenuScreen(
     onNavigateToGrid: () -> Unit,
@@ -27,7 +28,9 @@ fun MenuScreen(
     onDelayChange: (Long) -> Unit,
     onToggleGraphs: (Boolean) -> Unit,
     onToggleDataset: (Boolean) -> Unit,
+    onToggleManualTestMode: (Boolean) -> Unit,
     onTestClockSync: () -> Unit,
+    onStartRepeat: (buttonIndex: Int, count: Int) -> Unit,
     currentRows: Int,
     currentCols: Int,
     currentApiUrl: String,
@@ -35,6 +38,7 @@ fun MenuScreen(
     showGraphs: Boolean,
     useTestDataset: Boolean,
     networkStatus: Boolean,
+    manualTestMode: Boolean,
     clockSyncResult: ClockSyncResult? = null
 ) {
     var tempRows by remember { mutableStateOf(currentRows.toString()) }
@@ -43,6 +47,12 @@ fun MenuScreen(
     var tempDelay by remember { mutableStateOf(currentDelay.toString()) }
     var graphsEnabled by remember { mutableStateOf(showGraphs) }
     var datasetTestEnabled by remember { mutableStateOf(useTestDataset) }
+    var manualTestEnabled by remember { mutableStateOf(manualTestMode) }
+    
+    // Repeat feature state
+    var selectedButtonIndex by remember { mutableStateOf(0) }
+    var repeatCount by remember { mutableStateOf("1") }
+    var expandedButtonDropdown by remember { mutableStateOf(false) }
 
     LaunchedEffect(showGraphs) {
         graphsEnabled = showGraphs
@@ -50,6 +60,10 @@ fun MenuScreen(
 
     LaunchedEffect(useTestDataset) {
         datasetTestEnabled = useTestDataset
+    }
+    
+    LaunchedEffect(manualTestMode) {
+        manualTestEnabled = manualTestMode
     }
     
     Column(
@@ -313,6 +327,44 @@ fun MenuScreen(
             }
         }
         
+        // Manual Test Mode Card
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "Manual Test Mode",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Pressing grid buttons will flip them immediately\nwithout sending any requests to the server.",
+                        fontSize = 14.sp,
+                        color = Color.Black,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Switch(
+                        checked = manualTestEnabled,
+                        onCheckedChange = { enabled ->
+                            manualTestEnabled = enabled
+                            onToggleManualTestMode(enabled)
+                        }
+                    )
+                }
+            }
+        }
+        
         // Clock Sync Test Card
         Card(
             modifier = Modifier
@@ -452,6 +504,105 @@ fun MenuScreen(
                     color = Color.Gray,
                     modifier = Modifier.padding(top = 2.dp)
                 )
+            }
+        }
+        
+        // Repeat Button Presses Card
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "Repeat Button Presses",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                // Button Selection Dropdown
+                Text(
+                    text = "Button to Repeat",
+                    fontSize = 14.sp,
+                    color = Color.Black,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                
+                val totalButtons = currentRows * currentCols
+                val buttonOptions = (0 until totalButtons).map { "Button $it" }
+                
+                ExposedDropdownMenuBox(
+                    expanded = expandedButtonDropdown,
+                    onExpandedChange = { expandedButtonDropdown = !expandedButtonDropdown }
+                ) {
+                    OutlinedTextField(
+                        value = buttonOptions[selectedButtonIndex],
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedButtonDropdown) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedButtonDropdown,
+                        onDismissRequest = { expandedButtonDropdown = false }
+                    ) {
+                        buttonOptions.forEachIndexed { index, label ->
+                            DropdownMenuItem(
+                                text = { Text(label) },
+                                onClick = {
+                                    selectedButtonIndex = index
+                                    expandedButtonDropdown = false
+                                }
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Repeat Count Input
+                Text(
+                    text = "Number of Times",
+                    fontSize = 14.sp,
+                    color = Color.Black,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                OutlinedTextField(
+                    value = repeatCount,
+                    onValueChange = { repeatCount = it },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    placeholder = { Text("100") }
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Start Repeat Button
+                Button(
+                    onClick = {
+                        val count = repeatCount.toIntOrNull() ?: 1
+                        if (count > 0 && selectedButtonIndex >= 0 && selectedButtonIndex < totalButtons) {
+                            onStartRepeat(selectedButtonIndex, count)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFF9800)
+                    )
+                ) {
+                    Text(
+                        text = "Start Repeat Sequence",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
         

@@ -22,7 +22,8 @@ class GridButtonViewModel(
     recordingDelay: Long = 100L,
     showGraphs: Boolean = false,
     useTestDataset: Boolean = false,
-    initialNetworkLatency: Double = 0.0
+    initialNetworkLatency: Double = 0.0,
+    manualTestMode: Boolean = false
 ) : ViewModel() {
     
     // ===== CONFIGURATION - MODIFY THESE VALUES =====
@@ -44,7 +45,8 @@ class GridButtonViewModel(
                     offsetMs = 0.0,
                     phoneAhead = false
                 )
-            } else null
+            } else null,
+            manualTestMode = manualTestMode
         )
     )
     val uiState: StateFlow<GridButtonUiState> = _uiState.asStateFlow()
@@ -115,88 +117,104 @@ class GridButtonViewModel(
     }
     
     /**
+     * Core button press logic - suspend function that can be awaited
+     */
+    private suspend fun performButtonPress(buttonIndex: Int) {
+        // In manual test mode, skip all network requests and just flip the button locally
+        if (_uiState.value.manualTestMode) {
+            println("Manual test mode enabled - skipping network calls for button $buttonIndex")
+            updateButtonState(buttonIndex, true)
+            delay(recordingDelayMs)
+            updateButtonState(buttonIndex, false)
+            println("Manual test press completed for button $buttonIndex")
+            return
+        }
+        
+        try {
+            // Ping API first to get current network latency
+            val networkLatency = measureNetworkLatency()
+            println("Current network latency: ${networkLatency}ms")
+            
+            val timestamp = System.currentTimeMillis()
+            val request = RecordingRequest(
+                button = buttonIndex,
+                rows = _uiState.value.rows,
+                cols = _uiState.value.cols,
+                timestamp = timestamp,
+                press_length_ms = recordingDelayMs,
+                network_latency_ms = networkLatency
+            )
+            
+            println("Sending recording request for button $buttonIndex...")
+            
+            // Send start_recording request and WAIT for response
+            val startResponse = recordingApi.startRecording(request)
+            
+            if (startResponse.isSuccessful && startResponse.body()?.status == "success") {
+                // TIMESTAMP 1: Response received
+                val t1_responseReceived = System.currentTimeMillis()
+                println("═══ TIMING LOG ═══")
+                println("T1: Response received at ${t1_responseReceived}ms")
+                
+                // Server responded successfully
+                val responseBody = startResponse.body()
+                updateNetworkStatus(true)
+                
+                val delayMs = responseBody?.delay_ms ?: 0
+                
+                println("Recording will start in ${delayMs}ms")
+                
+                // TIMESTAMP 2: About to start delay
+                val t2_beforeDelay = System.currentTimeMillis()
+                val processingTime1 = t2_beforeDelay - t1_responseReceived
+                println("T2: Starting delay at ${t2_beforeDelay}ms (processing: ${processingTime1}ms)")
+                
+                // WAIT for sync delay before flipping button (synchronized with API)
+                delay(delayMs.toLong())
+                
+                // TIMESTAMP 3: Delay complete, about to flip button
+                val t3_beforeFlip = System.currentTimeMillis()
+                val actualDelayTime = t3_beforeFlip - t2_beforeDelay
+                println("T3: Delay complete at ${t3_beforeFlip}ms (actual delay: ${actualDelayTime}ms)")
+                
+                // NOW update the button to black (synchronized with recording start)
+                updateButtonState(buttonIndex, true)
+                
+                // TIMESTAMP 4: Button actually flipped
+                val t4_afterFlip = System.currentTimeMillis()
+                val flipTime = t4_afterFlip - t3_beforeFlip
+                println("T4: Button flipped at ${t4_afterFlip}ms (flip took: ${flipTime}ms)")
+                
+                val totalTime = t4_afterFlip - t1_responseReceived
+                println("═══ TOTAL: ${totalTime}ms from response to button flip ═══")
+                println("  Processing before delay: ${processingTime1}ms")
+                println("  Actual delay: ${actualDelayTime}ms")
+                println("  Button flip UI update: ${flipTime}ms")
+                
+                // Wait for press duration then reset button
+                delay(recordingDelayMs)
+                updateButtonState(buttonIndex, false)
+                println("Button $buttonIndex reset after $recordingDelayMs ms")
+            } else {
+                // Network failed - don't change button state
+                updateNetworkStatus(false)
+                println("Recording request failed for button $buttonIndex - button stays white")
+            }
+        } catch (e: Exception) {
+            // Network error - don't change button state
+            updateNetworkStatus(false)
+            println("Network error for button $buttonIndex: ${e.message}")
+            e.printStackTrace()
+        }
+    }
+    
+    /**
      * Handle button click - sends network requests and updates UI
      */
     fun onButtonClick(buttonIndex: Int) {
         println("Button $buttonIndex clicked!")
-        
         viewModelScope.launch {
-            try {
-                // Ping API first to get current network latency
-                val networkLatency = measureNetworkLatency()
-                println("Current network latency: ${networkLatency}ms")
-                
-                val timestamp = System.currentTimeMillis()
-                val request = RecordingRequest(
-                    button = buttonIndex,
-                    rows = _uiState.value.rows,
-                    cols = _uiState.value.cols,
-                    timestamp = timestamp,
-                    press_length_ms = recordingDelayMs,
-                    network_latency_ms = networkLatency
-                )
-                
-                println("Sending recording request for button $buttonIndex...")
-                
-                // Send start_recording request and WAIT for response
-                val startResponse = recordingApi.startRecording(request)
-                
-                if (startResponse.isSuccessful && startResponse.body()?.status == "success") {
-                    // TIMESTAMP 1: Response received
-                    val t1_responseReceived = System.currentTimeMillis()
-                    println("═══ TIMING LOG ═══")
-                    println("T1: Response received at ${t1_responseReceived}ms")
-                    
-                    // Server responded successfully
-                    val responseBody = startResponse.body()
-                    updateNetworkStatus(true)
-                    
-                    val delayMs = responseBody?.delay_ms ?: 0
-                    
-                    println("Recording will start in ${delayMs}ms")
-                    
-                    // TIMESTAMP 2: About to start delay
-                    val t2_beforeDelay = System.currentTimeMillis()
-                    val processingTime1 = t2_beforeDelay - t1_responseReceived
-                    println("T2: Starting delay at ${t2_beforeDelay}ms (processing: ${processingTime1}ms)")
-                    
-                    // WAIT for sync delay before flipping button (synchronized with API)
-                    delay(delayMs.toLong())
-                    
-                    // TIMESTAMP 3: Delay complete, about to flip button
-                    val t3_beforeFlip = System.currentTimeMillis()
-                    val actualDelayTime = t3_beforeFlip - t2_beforeDelay
-                    println("T3: Delay complete at ${t3_beforeFlip}ms (actual delay: ${actualDelayTime}ms)")
-                    
-                    // NOW update the button to black (synchronized with recording start)
-                    updateButtonState(buttonIndex, true)
-                    
-                    // TIMESTAMP 4: Button actually flipped
-                    val t4_afterFlip = System.currentTimeMillis()
-                    val flipTime = t4_afterFlip - t3_beforeFlip
-                    println("T4: Button flipped at ${t4_afterFlip}ms (flip took: ${flipTime}ms)")
-                    
-                    val totalTime = t4_afterFlip - t1_responseReceived
-                    println("═══ TOTAL: ${totalTime}ms from response to button flip ═══")
-                    println("  Processing before delay: ${processingTime1}ms")
-                    println("  Actual delay: ${actualDelayTime}ms")
-                    println("  Button flip UI update: ${flipTime}ms")
-                    
-                    // Wait for press duration then reset button
-                    delay(recordingDelayMs)
-                    updateButtonState(buttonIndex, false)
-                    println("Button $buttonIndex reset after $recordingDelayMs ms")
-                } else {
-                    // Network failed - don't change button state
-                    updateNetworkStatus(false)
-                    println("Recording request failed for button $buttonIndex - button stays white")
-                }
-            } catch (e: Exception) {
-                // Network error - don't change button state
-                updateNetworkStatus(false)
-                println("Network error for button $buttonIndex: ${e.message}")
-                e.printStackTrace()
-            }
+            performButtonPress(buttonIndex)
         }
     }
     
@@ -284,6 +302,64 @@ class GridButtonViewModel(
     }
     
     /**
+     * Repeat a button press a specified number of times
+     * Each press will be executed sequentially with proper delays
+     * 
+     * @param buttonIndex The button to press
+     * @param count Number of times to repeat
+     * @param onProgress Callback with (current, total) progress
+     * @param onComplete Callback when sequence finishes
+     */
+    fun repeatButtonPress(
+        buttonIndex: Int, 
+        count: Int,
+        onProgress: ((current: Int, total: Int) -> Unit)? = null,
+        onComplete: (() -> Unit)? = null
+    ) {
+        if (buttonIndex < 0 || buttonIndex >= _uiState.value.rows * _uiState.value.cols) {
+            println("ERROR: Invalid button index $buttonIndex for repeat")
+            onComplete?.invoke()
+            return
+        }
+        
+        if (count <= 0) {
+            println("ERROR: Repeat count must be positive, got $count")
+            onComplete?.invoke()
+            return
+        }
+        
+        println("Starting repeat sequence: Button $buttonIndex, $count times")
+        
+        viewModelScope.launch {
+            // Update progress to show we're starting
+            onProgress?.invoke(0, count)
+            
+            for (i in 1..count) {
+                println("Repeat $i/$count: Pressing button $buttonIndex")
+                // Use the awaitable suspend function to ensure each press completes before the next
+                performButtonPress(buttonIndex)
+                
+                // Update progress
+                onProgress?.invoke(i, count)
+                
+                // Wait for server recording to complete before starting next press
+                // Server recording takes approximately:
+                // - server_wait_ms (~100-200ms)
+                // - Recording duration: 32768 samples / 50000 Hz * 1000 = ~655ms
+                // Total: ~750-900ms
+                // We add a buffer to ensure the server is completely done
+                if (i < count) {
+                    val serverRecordingBufferMs = 1000L  // Wait 1 second between presses to ensure server is done
+                    println("Waiting ${serverRecordingBufferMs}ms for server recording to complete...")
+                    delay(serverRecordingBufferMs)
+                }
+            }
+            println("Repeat sequence completed: $count presses of button $buttonIndex")
+            onComplete?.invoke()
+        }
+    }
+    
+    /**
      * Test clock synchronization with server
      */
     fun testClockSync() {
@@ -362,7 +438,8 @@ data class GridButtonUiState(
     val cols: Int,
     val buttonStates: List<Boolean>, // true = pressed (black), false = unpressed (white)
     val networkStatus: Boolean, // true = connected, false = disconnected
-    val clockSyncResult: ClockSyncResult? = null
+    val clockSyncResult: ClockSyncResult? = null,
+    val manualTestMode: Boolean = false
 )
 
 /**

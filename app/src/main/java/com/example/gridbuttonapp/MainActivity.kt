@@ -40,6 +40,11 @@ fun AppNavigation() {
     var recordingDelay by remember { mutableStateOf(100L) }
     var showGraphs by remember { mutableStateOf(false) }
     var useTestDataset by remember { mutableStateOf(false) }
+    var manualTestMode by remember { mutableStateOf(false) }
+    
+    // Repeat sequence parameters - when set, grid screen will auto-run repeat
+    var repeatButtonIndex by remember { mutableStateOf<Int?>(null) }
+    var repeatCount by remember { mutableStateOf<Int?>(null) }
     
     // Create a shared viewModel for clock sync testing on menu screen
     // Use key to recreate when API URL changes
@@ -79,8 +84,18 @@ fun AppNavigation() {
                 useTestDataset = enabled
                 menuViewModel.updateDatasetMode(enabled)
             },
+            onToggleManualTestMode = { enabled ->
+                manualTestMode = enabled
+            },
             onTestClockSync = {
                 menuViewModel.testClockSync()
+            },
+            onStartRepeat = { buttonIndex, count ->
+                println("Starting repeat: Button $buttonIndex, $count times")
+                // Set repeat parameters and navigate to grid screen
+                repeatButtonIndex = buttonIndex
+                repeatCount = count
+                showMenu = false  // Navigate to grid screen
             },
             currentRows = gridRows,
             currentCols = gridCols,
@@ -89,6 +104,7 @@ fun AppNavigation() {
             showGraphs = showGraphs,
             useTestDataset = useTestDataset,
             networkStatus = menuUiState.networkStatus,
+            manualTestMode = manualTestMode,
             clockSyncResult = menuUiState.clockSyncResult
         )
     } else {
@@ -101,14 +117,27 @@ fun AppNavigation() {
         }
         
         GridButtonScreen(
-            onBackToMenu = { showMenu = true },
+            onBackToMenu = { 
+                // Clear repeat parameters when going back to menu
+                repeatButtonIndex = null
+                repeatCount = null
+                showMenu = true 
+            },
             initialRows = gridRows,
             initialCols = gridCols,
             apiUrl = apiUrl,
             recordingDelay = recordingDelay,
             showGraphs = showGraphs,
             useTestDataset = useTestDataset,
-            networkLatencyMs = networkLatency
+            networkLatencyMs = networkLatency,
+            manualTestMode = manualTestMode,
+            repeatButtonIndex = repeatButtonIndex,
+            repeatCount = repeatCount,
+            onRepeatComplete = {
+                // Clear repeat parameters when sequence finishes
+                repeatButtonIndex = null
+                repeatCount = null
+            }
         )
     }
 }
